@@ -24,13 +24,18 @@ class Order(Resource):
 
         items_id_quantity = Counter(json_data['item_ids'])  
         total_amount = 0
+
         for id, count in items_id_quantity.most_common():    
             item = ItemModel.find_by_id(id)
-            total_amount = total_amount + item.price * count
+            total_amount = total_amount + item.price * count        #add new item price to find total bill
             if not item:
                 return {"Message": "Item with id {} is not available".format(id)}, 400
             items.append(ItemInOrderModel(item_id=id, quantity=count))
-        order = OrderModel(items=items, status="pending", total_bill=total_amount)
+
+        order = OrderModel(items=items, status="pending", total_bill=total_amount)      #initially status is pending
         order.insert_order()
-        order.set_status("complete")
+        order.set_status("failed")          #before payment done status is failed if so
+        token = order.create_token()        #after getting card details we will make token
+        order.make_payment_stripe(token)    #make payment
+        order.set_status("completed")       #after payment done status will be 
         return {"order" : order_schema.dump(order)}, 200

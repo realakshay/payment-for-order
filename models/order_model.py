@@ -1,7 +1,13 @@
+import os
+import stripe
+from dotenv import load_dotenv
 from db import db
 from datetime import datetime as dt
 from models.item_in_order_model import ItemInOrderModel
 
+load_dotenv("/.env")
+
+CURRENCY = 'inr'
 
 class OrderModel(db.Model):
     __tablename__ = "neworders"
@@ -22,4 +28,29 @@ class OrderModel(db.Model):
         self.status = new_status
         self.insert_order()
 
-    
+    @property
+    def make_description(self):
+        items_count = [f"{item_data.quantity}x {item_data.item.name}" for item_data in self.items]
+        return ",".join(items_count)
+
+    def create_token(self):
+        stripe.api_key = os.getenv('STRIPE_SECRET_KEY')        #Test stripe secret key
+        token = stripe.Token.create(
+            #Dummy card details for testing purpose
+	        card={
+		        "number": "4242424242424242",
+                "exp_month": 7,
+                "exp_year": 2021,
+                "cvc": "314",
+  	        },
+        )
+        return token
+
+    def make_payment_stripe(self, token):
+        stripe.api_key = os.getenv('STRIPE_SECRET_KEY')     #Test stripe secret key
+        return stripe.Charge.create(
+            amount=int(self.total_bill)*100,
+            currency=CURRENCY,
+            description=self.make_description,
+            source=token
+        )
