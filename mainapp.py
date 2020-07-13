@@ -4,6 +4,7 @@ from flask_restful import Api
 from dotenv import load_dotenv
 from db import db
 from resources.item_resource import Item, ItemList
+from resources.order_resource import Order
 
 load_dotenv('.env')
 
@@ -26,6 +27,7 @@ def index():
 
 api.add_resource(Item, '/items')
 api.add_resource(ItemList, '/allitems')
+api.add_resource(Order,'/order')
 
 if __name__ == "__main__":
     db.init_app(app)
