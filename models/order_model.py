@@ -30,18 +30,19 @@ class OrderModel(db.Model):
 
     @property
     def make_description(self):
-        items_count = [f"{item_data.quantity}x {item_data.item.name}" for item_data in self.items]
+        items_count = [f"{item_data.quantity}x {item_data.item.name}" for item_data in self.items]	#suppose item is Bat and quantity is 3 then [Bat x 3]
         return ",".join(items_count)
 
     def create_token(self):
         stripe.api_key = os.getenv('STRIPE_SECRET_KEY')        #Test stripe secret key
         token = stripe.Token.create(
+		
             #Dummy card details for testing purpose
 	        card={
 		        "number": "4242424242424242",
-                "exp_month": 7,
-                "exp_year": 2021,
-                "cvc": "314",
+                	"exp_month": 7,
+                	"exp_year": 2021,
+                	"cvc": "314",
   	        },
         )
         return token
@@ -49,7 +50,7 @@ class OrderModel(db.Model):
     def make_payment_stripe(self, token):
         stripe.api_key = os.getenv('STRIPE_SECRET_KEY')     #Test stripe secret key
         return stripe.Charge.create(
-            amount=int(self.total_bill)*100,
+            amount=int(self.total_bill)*100,			#here 500 means rs 5.00
             currency=CURRENCY,
             description=self.make_description,
             source=token
